@@ -8,7 +8,7 @@
 </head>
 <body>
 <header class="site-header"><nav class="navigation" aria-label="PayGo"><a class="brand" href="/"><span class="brand-mark">P</span>PayGo</a><div class="nav-links"><a href="/" data-i18n="home">首页</a><a aria-current="page" class="docs-link" href="/docs/" data-i18n="docs">对接文档</a><label class="language-select"><span class="visually-hidden" data-i18n="language">语言</span><select id="language"><option value="zh">简体中文</option><option value="zh-TW">繁體中文</option><option value="en">English</option></select></label><a href="https://app.paygo2.uk/login" data-i18n="login">登录</a><a class="button button-small" href="https://app.paygo2.uk/register" data-i18n="register">注册</a></div></nav></header>
-<main class="docs-main"><div class="docs-layout"><aside class="toc"><strong data-i18n="contents">目录</strong><a href="#start" data-i18n="quick">快速开始</a><a href="#sign" data-i18n="signing">签名规则</a><a href="#sdk">Browser SDK</a><a href="#parameters" data-i18n="params">请求参数</a><a href="#response" data-i18n="responseParams">请求返回参数</a><a href="#callbacks" data-i18n="callbacks">服务器回调参数</a><a href="#signature" data-i18n="signatureCalc">签名计算</a><a href="#methods" data-i18n="methods">支付方式</a><a href="#errors" data-i18n="errors">错误码</a></aside>
+<main class="docs-main"><div class="docs-layout"><aside class="toc"><strong data-i18n="contents">目录</strong><a href="#start" data-i18n="quick">快速开始</a><a href="#sign" data-i18n="signing">签名规则</a><a href="#sdk">Browser SDK</a><a href="#parameters" data-i18n="params">请求参数</a><a href="#curl" data-i18n="curlTitle">cURL 下单联调</a><a href="#response" data-i18n="responseParams">请求返回参数</a><a href="#callbacks" data-i18n="callbacks">服务器回调参数</a><a href="#signature" data-i18n="signatureCalc">签名计算</a><a href="#methods" data-i18n="methods">支付方式</a><a href="#errors" data-i18n="errors">错误码</a></aside>
 <article class="docs-content">
 <section class="hero"><p class="eyebrow">PAYGO · API REFERENCE</p><h1 data-i18n="title">PayGo 开发文档</h1><p data-i18n="lead">使用 Browser SDK 创建订单和收银台；以签名验证的 Webhook 作为最终支付确认。</p><div class="notice"><strong data-i18n="secretTitle">SECRET 仅能保存在商户服务端。</strong> <span data-i18n="secretText">绝不能放入浏览器、移动端或公开代码仓库。</span></div></section>
 <section class="section" id="start"><h2 data-i18n="quick">快速开始</h2><p data-i18n="quickBody">在商户后台配置 PID、SECRET、Webhook、收款方式与 Browser SDK Origin 白名单。由商户服务端按真实订单生成一次性签名参数，再由浏览器调用 PayGo.mount()。</p><ol class="flow"><li data-i18n="flow1">服务端生成订单参数</li><li data-i18n="flow2">HMAC-SHA256 签名</li><li data-i18n="flow3">页面调用 PayGo.mount()</li><li data-i18n="flow4">收银台与状态更新</li><li data-i18n="flow5">Webhook 最终确认</li></ol></section>
@@ -35,6 +35,62 @@ PayGo.mount('#paygo-checkout', {
 <section class="section" id="parameters"><h2 data-i18n="params">请求参数</h2><div class="api-origin"><span>API</span><div><strong data-i18n="apiOriginTitle">支付请求地址</strong><code>POST https://api.paygo2.uk/api/v1/paygo/checkout/sessions</code><p data-i18n="apiOriginText">Content-Type: application/json。SDK 默认使用此地址，无需传 api；直接调试时需发送商户白名单内的 Origin 请求头。</p></div></div><div class="table-wrap"><table><thead><tr><th data-i18n="parameter">参数</th><th data-i18n="required">必填</th><th data-i18n="description">说明</th></tr></thead><tbody>
 <tr><td><code>pid</code></td><td>✓</td><td data-i18n="pPid">PayGo 商户 PID</td></tr><tr><td><code>merchant_order_no</code></td><td>✓</td><td data-i18n="pOrder">商户唯一订单号，不超过 64 个字符</td></tr><tr><td><code>amount</code></td><td>✓</td><td data-i18n="pAmount">人民币金额字符串；最低 1.00，最多两位小数</td></tr><tr><td><code>name</code></td><td>✓</td><td data-i18n="pName">商品或订单名称</td></tr><tr><td><code>type</code></td><td>✓</td><td><code>wechat</code> / <code>alipay</code> / <code>usdt.tron</code> / <code>trx.tron</code></td></tr><tr><td><code>timestamp</code></td><td>✓</td><td data-i18n="pTime">Unix 秒级时间戳，有效期 ±5 分钟</td></tr><tr><td><code>nonce</code></td><td>✓</td><td data-i18n="pNonce">16–128 字符随机串，只能使用一次</td></tr><tr><td><code>sign</code></td><td>✓</td><td data-i18n="pSign">服务端用 SECRET 生成的 HMAC-SHA256</td></tr><tr><td><code>return_url</code></td><td>✓</td><td data-i18n="pReturn">支付后返回的 HTTP/HTTPS URL</td></tr><tr><td><code>lang</code></td><td>–</td><td data-i18n="pLang">zh / zh-TW / en；设置收银台初始语言</td></tr>
 </tbody></table></div></section>
+<section class="section" id="curl"><h2 data-i18n="curlTitle">cURL 下单联调</h2><p data-i18n="curlIntro">无需登录文档平台。需要 Bash、Python 3 和支持 --fail-with-body 的 cURL（7.76.0 或更新版本）；在本机交互式终端运行。先填写自己的 PID、白名单 Origin（无路径和末尾斜线）与支付返回地址。</p><div class="code"><button class="copy" data-copy>复制</button><pre>export PAYGO_PID=&#x27;YOUR_MERCHANT_PID&#x27;
+export PAYGO_ORIGIN=&#x27;https://your-merchant.example&#x27;
+export PAYGO_RETURN_URL=&#x27;https://your-merchant.example/pay/result&#x27;</pre></div><p data-i18n="curlRun">复制并执行下面完整脚本，或下载脚本后运行 bash create-order.sh。SECRET 在终端隐藏输入，仅在本机用于签名，不写入请求正文。金额和支付方式在 fields 中修改；默认 1.00 元、支付宝，需已启用对应通道。每次执行会创建新的订单号、时间戳和 nonce。</p><p><a href="../examples/create-order.sh" download data-i18n="curlDownload">下载完整下单脚本</a></p><div class="code"><button class="copy" data-copy>复制</button><pre>#!/usr/bin/env bash
+# Requires Bash, Python 3, and cURL. Run locally; never paste SECRET into this file.
+set -euo pipefail
+: &quot;${PAYGO_PID:?Set PAYGO_PID to your merchant PID}&quot;
+: &quot;${PAYGO_ORIGIN:?Set PAYGO_ORIGIN to your allowlisted page Origin}&quot;
+: &quot;${PAYGO_RETURN_URL:?Set PAYGO_RETURN_URL to your payment return URL}&quot;
+export PAYGO_PID PAYGO_ORIGIN PAYGO_RETURN_URL
+
+payload=&quot;$(python3 - &lt;&lt;&#x27;PY&#x27;
+import getpass
+import hashlib
+import hmac
+import json
+import os
+import secrets
+import time
+from urllib.parse import quote, urlsplit
+
+origin = urlsplit(os.environ[&#x27;PAYGO_ORIGIN&#x27;])
+return_url = urlsplit(os.environ[&#x27;PAYGO_RETURN_URL&#x27;])
+if (origin.scheme not in (&#x27;http&#x27;, &#x27;https&#x27;) or not origin.netloc
+        or origin.path or origin.query or origin.fragment
+        or origin.username or origin.password):
+    raise SystemExit(&#x27;PAYGO_ORIGIN must be an http(s) Origin without a path or credentials&#x27;)
+if (return_url.scheme not in (&#x27;http&#x27;, &#x27;https&#x27;) or not return_url.netloc
+        or return_url.username or return_url.password):
+    raise SystemExit(&#x27;PAYGO_RETURN_URL must be an http(s) URL without credentials&#x27;)
+secret = getpass.getpass(&#x27;PayGo SECRET (hidden, local signing only): &#x27;)
+if not secret:
+    raise SystemExit(&#x27;SECRET must not be empty&#x27;)
+fields = {
+    &#x27;pid&#x27;: os.environ[&#x27;PAYGO_PID&#x27;],
+    &#x27;merchant_order_no&#x27;: &#x27;CURL-&#x27; + str(int(time.time())) + &#x27;-&#x27; + secrets.token_hex(8),
+    &#x27;amount&#x27;: &#x27;1.00&#x27;,
+    &#x27;name&#x27;: &#x27;cURL integration test&#x27;,
+    &#x27;type&#x27;: &#x27;alipay&#x27;,
+    &#x27;return_url&#x27;: os.environ[&#x27;PAYGO_RETURN_URL&#x27;],
+    &#x27;timestamp&#x27;: str(int(time.time())),
+    &#x27;nonce&#x27;: secrets.token_hex(16),
+}
+canonical = &#x27;&amp;&#x27;.join(key + &#x27;=&#x27; + quote(fields[key], safe=&#x27;-._~&#x27;) for key in sorted(fields))
+fields[&#x27;sign&#x27;] = hmac.new(secret.encode(), canonical.encode(), hashlib.sha256).hexdigest()
+print(json.dumps(fields, ensure_ascii=False))
+PY
+)&quot;
+
+printf &#x27;%s&#x27; &quot;$payload&quot; | curl --silent --show-error --fail-with-body \
+  --connect-timeout 10 --max-time 30 \
+  --request POST &#x27;https://api.paygo2.uk/api/v1/paygo/checkout/sessions&#x27; \
+  --header &quot;Origin: $PAYGO_ORIGIN&quot; \
+  --header &#x27;Content-Type: application/json&#x27; \
+  --data-binary @-
+printf &#x27;\n&#x27;
+</pre></div><p data-i18n="curlResult">脚本会向真实接口创建订单，请按需运行。检查 JSON 中 code 是否为 0，再查看 data 的订单状态和收银台字段；创建成功不代表支付成功。超时也可能已经创建订单，先在商户后台确认，不要盲目重复下单。支付确认以验签后的 Webhook 为准。</p></section>
 <section class="section" id="response"><h2 data-i18n="responseParams">请求返回参数</h2><p data-i18n="rIntro">下单接口返回 JSON，code 为 0 表示成功，订单信息位于 data。下表仅列出商户对接常用字段，SDK 内部通信和重复展示字段已省略；实际响应可能包含其他字段。</p><div class="table-wrap"><table><thead><tr><th data-i18n="parameter">参数</th><th data-i18n="fieldType">类型</th><th data-i18n="description">说明</th></tr></thead><tbody>
 <tr><td><code>code</code></td><td>number</td><td data-i18n="rCode">业务状态码；0 为成功，非 0 时根据 message 和错误码处理，不能只判断 HTTP 200</td></tr>
 <tr><td><code>message</code></td><td>string</td><td data-i18n="rMessage">结果说明；成功通常为 success</td></tr>
@@ -129,5 +185,8 @@ Object.assign(t["zh-TW"],{"signatureCalc": "簽名計算", "alipay": "支付寶�
 Object.assign(t["zh"],{"responseParams": "请求返回参数", "callbacks": "服务器回调参数", "rIntro": "下单接口返回 JSON，code 为 0 表示成功，订单信息位于 data。下表仅列出商户对接常用字段，SDK 内部通信和重复展示字段已省略；实际响应可能包含其他字段。", "fieldType": "类型", "rCode": "业务状态码；0 为成功，非 0 时根据 message 和错误码处理，不能只判断 HTTP 200", "rMessage": "结果说明；成功通常为 success", "rData": "成功时为订单对象；业务失败时可能为空数组，先检查 code 再读取订单字段", "rOrder": "请求中提交的商户订单号，用于关联业务订单", "rStatus": "订单状态：pending 待支付、paid 已支付、expired 已过期、cancelled 已取消；创建成功不代表支付成功", "rAmount": "原始订单金额字符串，与 currency 配套使用", "rCurrency": "订单币种，如 CNY", "rActual": "买家实际应付数量字符串；扫码支付为人民币金额，链上支付为对应资产数量。展示或支付时以此为准", "rAsset": "支付资产与网络，结合 actual_amount 识别支付单位和通道", "rCheckout": "本次订单的收银台地址，可用于跳转支付；Browser SDK 会自动展示收银台", "rQr": "仅待支付时返回。format=svg 时 data 为 Base64 编码 SVG；format=image 时 url 为图片地址，mime 为图片类型", "rAddress": "链上收款地址，仅待支付时提供；微信或支付宝扫码支付请使用 qr_code", "rExpires": "订单过期时间，ISO 8601 格式，包含时区", "rExample": "成功返回示例（仅展示核心字段）", "rFinal": "下单成功只代表订单已创建。最终支付确认仍以服务器回调验签结果为准。"});
 Object.assign(t["en"],{"responseParams": "Response parameters", "callbacks": "Server callback parameters", "rIntro": "The order endpoint returns JSON. A code of 0 indicates success and data contains the order. Only commonly used merchant fields are listed; internal SDK communication and duplicate display fields are omitted. Actual responses may include additional fields.", "fieldType": "Type", "rCode": "Business result code: 0 means success. For nonzero codes, handle message and the error code; HTTP 200 alone does not indicate success.", "rMessage": "Result description; typically success on success", "rData": "Order object on success; may be an empty array on business failure. Check code before reading order fields.", "rOrder": "Merchant order number submitted in the request", "rStatus": "pending, paid, expired, or cancelled. Successful creation does not mean payment is complete.", "rAmount": "Original order amount string; interpret with currency", "rCurrency": "Order currency, such as CNY", "rActual": "Actual quantity the buyer must pay: CNY for QR payments or asset quantity for on-chain payments. Use this value for payment and display.", "rAsset": "Payment asset and network; interpret with actual_amount to identify the unit and channel", "rCheckout": "Checkout URL for this order, usable for redirecting to payment. The Browser SDK displays checkout automatically.", "rQr": "Only returned while pending. For format=svg, data contains Base64-encoded SVG. For format=image, url is the image URL and mime its media type.", "rAddress": "On-chain receiving address, provided only while pending. For WeChat or Alipay payments use qr_code.", "rExpires": "Order expiration time in ISO 8601 format, including the timezone", "rExample": "Success response example (core fields only)", "rFinal": "Successful order creation is not payment confirmation. Confirm payment only after verifying the server callback."});
 Object.assign(t["zh-TW"],{"responseParams": "請求回傳參數", "callbacks": "伺服器回呼參數", "rIntro": "下單介面回傳 JSON，code 為 0 表示成功，訂單資訊位於 data。下表僅列出商戶串接常用欄位，SDK 內部通訊及重複顯示欄位已省略；實際回應可能包含其他欄位。", "fieldType": "類型", "rCode": "業務狀態碼；0 為成功，非 0 時依 message 和錯誤碼處理，不能只判斷 HTTP 200", "rMessage": "結果說明；成功通常為 success", "rData": "成功時為訂單物件；業務失敗時可能為空陣列，先檢查 code 再讀取訂單欄位", "rOrder": "請求中提交的商戶訂單號，用於關聯業務訂單", "rStatus": "訂單狀態：pending 待支付、paid 已支付、expired 已過期、cancelled 已取消；建立成功不代表支付成功", "rAmount": "原始訂單金額字串，與 currency 配套使用", "rCurrency": "訂單幣別，如 CNY", "rActual": "買家實際應付數量字串；掃碼支付為人民幣金額，鏈上支付為對應資產數量。顯示或支付時以此為準", "rAsset": "支付資產與網路，結合 actual_amount 識別支付單位和通道", "rCheckout": "本次訂單的收銀台網址，可用於跳轉支付；Browser SDK 會自動顯示收銀台", "rQr": "僅待支付時回傳。format=svg 時 data 為 Base64 編碼 SVG；format=image 時 url 為圖片網址，mime 為圖片類型", "rAddress": "鏈上收款地址，僅待支付時提供；微信或支付寶掃碼支付請使用 qr_code", "rExpires": "訂單過期時間，ISO 8601 格式，包含時區", "rExample": "成功回傳範例（僅顯示核心欄位）", "rFinal": "下單成功只代表訂單已建立。最終支付確認仍以伺服器回呼驗簽結果為準。"});
+Object.assign(t["zh"],{"curlTitle": "cURL 下单联调", "curlIntro": "无需登录文档平台。需要 Bash、Python 3 和支持 --fail-with-body 的 cURL（7.76.0 或更新版本）；在本机交互式终端运行。先填写自己的 PID、白名单 Origin（无路径和末尾斜线）与支付返回地址。", "curlRun": "复制并执行下面完整脚本，或下载脚本后运行 bash create-order.sh。SECRET 在终端隐藏输入，仅在本机用于签名，不写入请求正文。金额和支付方式在 fields 中修改；默认 1.00 元、支付宝，需已启用对应通道。每次执行会创建新的订单号、时间戳和 nonce。", "curlDownload": "下载完整下单脚本", "curlResult": "脚本会向真实接口创建订单，请按需运行。检查 JSON 中 code 是否为 0，再查看 data 的订单状态和收银台字段；创建成功不代表支付成功。超时也可能已经创建订单，先在商户后台确认，不要盲目重复下单。支付确认以验签后的 Webhook 为准。"});
+Object.assign(t["en"],{"curlTitle": "Test an order with cURL", "curlIntro": "No documentation platform login is needed. Requires Bash, Python 3, and cURL 7.76.0 or later (--fail-with-body). Run in a local interactive terminal. Set your merchant PID, allowlisted Origin (no path or trailing slash), and payment return URL first.", "curlRun": "Copy and run the complete script below, or download it and run bash create-order.sh. SECRET is entered at a hidden terminal prompt, used only for local signing, and excluded from the request body. Edit amount and type in fields; defaults are CNY 1.00 and Alipay, which must be enabled. Each run generates a new order number, timestamp, and nonce.", "curlDownload": "Download the complete order script", "curlResult": "This script creates an order through the real API. Check code is 0 before reading data, status, and checkout fields. Creation is not payment confirmation. A timeout can still leave an order created; check the merchant console before trying again. Confirm payment only after verifying the Webhook."});
+Object.assign(t["zh-TW"],{"curlTitle": "cURL 下單測試", "curlIntro": "無需登入文件平台。需要 Bash、Python 3 和支援 --fail-with-body 的 cURL（7.76.0 或更新版本）；在本機互動式終端執行。先填入自己的 PID、白名單 Origin（無路徑及結尾斜線）與支付返回網址。", "curlRun": "複製並執行下方完整腳本，或下載後執行 bash create-order.sh。SECRET 在終端隱藏輸入，僅在本機用於簽名，不寫入請求正文。金額與支付方式在 fields 中修改；預設為 1.00 元、支付寶，需已啟用對應通道。每次執行會產生新的訂單號、時間戳與 nonce。", "curlDownload": "下載完整下單腳本", "curlResult": "腳本會透過真實介面建立訂單，請按需執行。先檢查 JSON 的 code 是否為 0，再查看 data 的訂單狀態及收銀台欄位；建立成功不代表支付成功。逾時仍可能已建立訂單，先在商戶後台確認，避免盲目重複下單。支付確認以驗簽後的 Webhook 為準。"});
 const requested=new URLSearchParams(location.search).get('lang');const lang=t[requested]?requested:'zh';const text=t[lang];document.documentElement.lang=lang==='zh-TW'?'zh-Hant':lang==='en'?'en':'zh-CN';document.querySelectorAll('[data-i18n]').forEach(node=>node.textContent=text[node.dataset.i18n]||node.textContent);document.querySelectorAll('.docs-link').forEach(link=>link.href='/docs/?lang='+encodeURIComponent(lang));const picker=document.querySelector('#language');picker.value=lang;picker.addEventListener('change',()=>location.href='/docs/?lang='+encodeURIComponent(picker.value));document.querySelectorAll('[data-copy]').forEach(button=>button.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(button.parentElement.querySelector('pre').textContent);button.textContent=lang==='en'?'Copied':'已複製';setTimeout(()=>button.textContent=lang==='en'?'Copy':'复制',1200)}catch{button.textContent='…'}}));
 </script></body></html>

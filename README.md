@@ -16,7 +16,7 @@ PayGo 官网首页及公开开发文档的独立源码仓库。官网介绍产�
 - **官网首页**：产品介绍、收款方式、接入步骤及常见问题。
 - **接口文档**：商户下单、收银台调用、支付结果确认、签名与联调说明。
 - **多语言**：页面支持简体中文、繁体中文和英文。
-- **Apifox 示例**：提供自动生成时间戳、nonce 与下单签名的前置脚本。
+- **cURL 示例**：免文档平台登录，在本机生成动态签名并发送下单请求。
 
 ## 接口文档导览
 
@@ -26,6 +26,7 @@ PayGo 官网首页及公开开发文档的独立源码仓库。官网介绍产�
 | [签名规则](https://www.paygo2.uk/docs/#sign) | 字段排序、RFC 3986 编码与 HMAC-SHA256 签名 |
 | [Browser SDK](https://www.paygo2.uk/docs/#sdk) | `PayGo.mount()` 调用方式及浏览器事件回调 |
 | [请求参数](https://www.paygo2.uk/docs/#parameters) | 下单接口、必填字段、字段格式与请求约束 |
+| [cURL 下单联调](https://www.paygo2.uk/docs/#curl) | 可复制的完整脚本、本机签名与请求发送 |
 | [请求返回参数](https://www.paygo2.uk/docs/#response) | 业务状态码、订单状态、金额、收银台与二维码字段 |
 | [服务器回调参数](https://www.paygo2.uk/docs/#callbacks) | Webhook JSON 正文及签名请求头 |
 | [签名计算](https://www.paygo2.uk/docs/#signature) | 下单签名与回调验签的完整示例 |
@@ -63,17 +64,24 @@ PayGo 官网首页及公开开发文档的独立源码仓库。官网介绍产�
 
 实际可用通道取决于商户启用状态、有效订阅权益以及收款码或钱包配置。
 
-## Apifox 下单联调
+## cURL 下单联调
 
-已有私有项目：[PayGo 下单测试](https://app.apifox.com/project/8934328)。需要具备该项目的访问权限。
+无需登录文档平台。完整的可复制示例见 [cURL 下单联调文档](https://www.paygo2.uk/docs/#curl)，脚本源码见 [examples/create-order.sh](examples/create-order.sh)。
 
-1. 选择「PayGo API（填写本地凭据）」环境，在**本地值**填写 `PAYGO_PID`、`PAYGO_SECRET` 和 `PAYGO_ORIGIN`。
-2. `PAYGO_ORIGIN` 应为已加入商户白名单的页面 Origin，不包含路径。
-3. 打开「创建支付订单（自动签名）」中的「下单测试（修改订单号或金额即可）」用例，填写订单号、金额、商品名、支付方式及返回地址。
-4. 发送前，前置脚本自动填入商户 PID、刷新时间戳与 nonce、计算签名，并设置 `Origin` 和 JSON 请求头。
-5. 检查响应的业务状态码和订单字段；支付后结合 Webhook 验签结果确认完整流程。
+需要 Bash、Python 3 和 cURL 7.76.0 或更新版本，在本机交互式终端中运行。
 
-前置脚本源码见 [docs/apifox-pre-request.js](docs/apifox-pre-request.js)。脚本要求签名字段为非空字符串；创建新订单或修改金额时，请使用新的商户订单号。Webhook 地址在商户后台配置。
+```bash
+export PAYGO_PID='YOUR_MERCHANT_PID'
+export PAYGO_ORIGIN='https://your-merchant.example'
+export PAYGO_RETURN_URL='https://your-merchant.example/pay/result'
+bash examples/create-order.sh
+```
+
+将占位值改为自己的配置。Origin 必须已加入商户白名单，不包含路径和末尾斜线。执行时按提示输入 `SECRET`，输入内容不会显示，也不会写入脚本或下单请求正文。
+
+脚本自动生成新订单号、当前时间戳和随机 nonce，按 RFC 3986 编码与 HMAC-SHA256 规则在本机签名，然后通过 cURL 发送 JSON 请求。默认金额为 `1.00` 元，支付方式为 `alipay`；可修改脚本中 `fields` 的金额、商品名和支付方式，所用通道需已启用。
+
+这会向真实接口创建订单。先检查响应的 `code`，成功后读取 `data`；最终支付确认以服务端验签后的 Webhook 为准。超时仍可能已创建订单，请先在商户后台确认再决定是否重新运行。Webhook 地址在商户后台配置。
 
 ## 目录结构
 
@@ -84,8 +92,9 @@ PayGo 官网首页及公开开发文档的独立源码仓库。官网介绍产�
 │   ├── style.css              # 官网样式
 │   └── docs.css               # 文档样式
 ├── docs/
-│   ├── index.html             # 接口文档及多语言内容
-│   └── apifox-pre-request.js   # Apifox 自动签名前置脚本
+│   └── index.html             # 接口文档及多语言内容
+├── examples/
+│   └── create-order.sh        # 本机签名与 cURL 下单脚本
 ├── robots.txt                 # 搜索引擎抓取规则
 ├── sitemap.xml                # 站点地图
 ├── README.md                  # 项目说明与文档入口
@@ -97,7 +106,7 @@ PayGo 官网首页及公开开发文档的独立源码仓库。官网介绍产�
 ## 维护说明
 
 - 首页内容与交互在 `index.html` 中维护，文档内容与示例在 `docs/index.html` 中维护；修改文案时同步检查三种语言。
-- 更新接口字段、签名或回调说明时，同时检查文档示例和 Apifox 前置脚本的一致性。
+- 更新接口字段、签名或回调说明时，同时检查文档示例和 cURL 下单脚本的一致性。
 - 页面样式分别由 `assets/style.css` 和 `assets/docs.css` 管理，维护时保留资源的相对路径。
 - `SECRET` 仅保存在商户服务端或联调工具的本地环境中，不得写入浏览器代码、共享值或 Git 仓库。文档中的演示密钥与固定参数只用于说明算法。
 - 本仓库提交和推送统一使用 `xee-martin`。当前工作区已启用身份检查；新克隆需按 [AGENTS.md](AGENTS.md) 设置本地身份、独立认证并启用 hooks。
