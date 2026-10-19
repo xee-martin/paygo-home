@@ -18,6 +18,34 @@ PayGo 官网首页及公开开发文档的独立源码仓库。官网介绍产�
 - **多语言**：页面支持简体中文、繁体中文和英文。
 - **cURL 示例**：免文档平台登录，在本机生成动态签名并发送下单请求。
 
+## 后台界面预览
+
+以下截图展示商户后台的主要操作界面；截图中的数据、汇率及订单状态为截取时的界面记录。
+
+### 仪表板
+
+集中查看账户余额、今日成功支付金额、成功订单与待支付订单，以及订阅状态和帮助入口。
+
+![PayGo 商户后台仪表板](assets/screenshots/dashboard.png)
+
+### 支付设置
+
+配置 USDT、TRX 通道开关、默认计价币种、TRON 网络环境、汇率与订单有效期。截图展示的是 TRON Nile 测试网设置。
+
+![PayGo 支付设置与 TRON 通道配置](assets/screenshots/payment-settings.png)
+
+### 微信收款码
+
+管理收款码的上传、验证、启用状态与收款记录。
+
+![PayGo 微信收款码管理](assets/screenshots/wechat-collection-codes.png)
+
+### 订单管理
+
+按订单信息、状态和时间查询订单，查看订单金额、实际支付金额、Webhook 状态及订单详情。
+
+![PayGo 订单管理](assets/screenshots/order-management.png)
+
 ## 接口文档导览
 
 | 章节 | 内容 |
@@ -90,7 +118,8 @@ bash examples/create-order.sh
 ├── index.html                 # 官网首页及多语言内容
 ├── assets/
 │   ├── style.css              # 官网样式
-│   └── docs.css               # 文档样式
+│   ├── docs.css               # 文档样式
+│   └── screenshots/           # README 后台界面截图
 ├── docs/
 │   └── index.html             # 接口文档及多语言内容
 ├── examples/
