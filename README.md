@@ -128,7 +128,6 @@ bash examples/create-order.sh
 ├── sitemap.xml                # 站点地图
 ├── README.md                  # 项目说明与文档入口
 ├── BACKUP.md                  # 备份范围与恢复说明
-├── AGENTS.md                  # 项目维护及 Git 账号规则
 └── .githooks/                 # 提交身份与推送检查
 ```
 
@@ -138,5 +137,5 @@ bash examples/create-order.sh
 - 更新接口字段、签名或回调说明时，同时检查文档示例和 cURL 下单脚本的一致性。
 - 页面样式分别由 `assets/style.css` 和 `assets/docs.css` 管理，维护时保留资源的相对路径。
 - `SECRET` 仅保存在商户服务端或联调工具的本地环境中，不得写入浏览器代码、共享值或 Git 仓库。文档中的演示密钥与固定参数只用于说明算法。
-- 本仓库提交和推送统一使用 `xee-martin`。当前工作区已启用身份检查；新克隆需按 [AGENTS.md](AGENTS.md) 设置本地身份、独立认证并启用 hooks。
+- 本仓库提交和推送统一使用 `xee-martin`。当前工作区已启用身份检查；新克隆需设置本地提交身份和独立认证，并执行 `git config --local core.hooksPath .githooks` 启用检查。
 - 备份范围和恢复说明见 [BACKUP.md](BACKUP.md)。
