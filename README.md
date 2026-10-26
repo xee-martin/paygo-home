@@ -10,6 +10,7 @@ PayGo 官网首页及公开开发文档的独立源码仓库。官网介绍产�
 | --- | --- |
 | 官网首页 | [https://www.paygo2.uk](https://www.paygo2.uk) |
 | 对接文档 | [https://www.paygo2.uk/docs](https://www.paygo2.uk/docs) |
+| 登录系统 | [https:// app.paygo2.uk/](https://app.paygo2.uk/) |
 
 ## 项目内容
 
